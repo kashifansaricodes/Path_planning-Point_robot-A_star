@@ -43,17 +43,23 @@ plt.show()
 actions_set = [(1.5*np.radian(np.cos(-60)), 1.5*np.radian(np.cos(-60))), (1.5*np.radian(np.cos(-30)), 1.5*np.radian(np.cos(-30))), 
                (1.5*np.radian(np.cos(0)), 1.5*np.radian(np.cos(0))), (1.5*np.radian(np.cos(30)), 1.5*np.radian(np.cos(30))) 
                (1.5*np.radian(np.cos(60)), 1.5*np.radian(np.cos(60)))]
-cost_straight = 1.0
-cost_diagonal = 1.4
+# cost_straight = 1.0
+# cost_diagonal = 1.4
+cost_0 = np.cos(0)
+cost_30 = np.cos(30)
+cost_60 = np.cos(60)
+
 video_name = 'D:\Desktop\djikstra_scan.mp4'
 out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), 10, (map.shape[1], map.shape[0]))
 
 # Define the function to calculate the cost of moving from one node to another
 def calculate_cost(current_cost, action):
-    if action in [(1, 1), (-1, 1), (1, -1), (-1, -1)]:
-        return current_cost + cost_diagonal
+    if action in [(1.5*np.radian(np.cos(-60)), 1.5*np.radian(np.cos(-60))), (1.5*np.radian(np.cos(60)), 1.5*np.radian(np.cos(60)))]:
+        return current_cost + cost_60
+    if action in [(1.5*np.radian(np.cos(-30)), 1.5*np.radian(np.cos(-30))), (1.5*np.radian(np.cos(30)), 1.5*np.radian(np.cos(30)))]: 
+        return current_cost + cost_30
     else:
-        return current_cost + cost_straight
+        return current_cost + cost_0
 
 # Dijkstra's algorithm function
 def dijkstra(start, goal, map):
