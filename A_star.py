@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import heapq
+import time 
 
 # Generating map
 map = np.zeros((500, 1200, 3))
@@ -42,19 +43,22 @@ plt.imshow(map.astype(int))
 plt.title("Initial Map (close this window to continue)")
 plt.show()
 
-# Define the actions set
-actions_set = [(1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)]
-cost_straight = 1.0
-cost_diagonal = 1.4
-video_name = 'D:\Desktop\djikstra_scan.mp4'
+# Start time
+time_start = time.time()
+
+video_name = 'D:\Desktop\A*_scan.mp4'
 out = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'mp4v'), 10, (map.shape[1], map.shape[0]))
 
-# Define the function to calculate the cost of moving from one node to another
-def calculate_cost(current_cost, action):
-    if action in [(1, 1), (-1, 1), (1, -1), (-1, -1)]:
-        return current_cost + cost_diagonal
-    else:
-        return current_cost + cost_straight
+step_size = 1.5
+thetas = 30
+
+#Defone action set and cost calculation
+actions_set = [(step_size*np.cos(np.radians(6*thetas)), step_size*np.sin(np.radians(6*thetas))),(step_size*np.cos(np.radians(5*thetas)), step_size*np.sin(np.radians(5*thetas))),(step_size*np.cos(np.radians(4*thetas)), step_size*np.sin(np.radians(4*thetas))), (step_size*np.cos(np.radians(3*thetas)), step_size*np.sin(np.radians(3*thetas))),(step_size*np.cos(np.radians(2*thetas)), step_size*np.sin(np.radians(2*thetas))), 
+                    (step_size*np.cos(np.radians(thetas)), step_size*np.sin(np.radians(thetas))), 
+                    (step_size*1, 0), 
+                    (step_size*np.cos(np.radians(-thetas)), step_size*np.sin(np.radians(-thetas))), 
+                    (step_size*np.cos(np.radians(-2*thetas)), step_size*np.sin(np.radians(-2*thetas))), (step_size*np.cos(np.radians(-3*thetas)), step_size*np.sin(np.radians(-3*thetas))), (step_size*np.cos(np.radians(-4*thetas)), step_size*np.sin(np.radians(-4*thetas))), (step_size*np.cos(np.radians(-5*thetas)), step_size*np.sin(np.radians(-5*thetas)))]
+costs = [step_size, step_size, step_size, step_size, step_size, step_size, step_size, step_size, step_size, step_size, step_size, step_size]
 
 # Define the heuristic function (Euclidean distance)
 def heuristic(node, goal):
@@ -83,12 +87,12 @@ def a_star(start, goal, map):
 
         closed_list.add(current_node)
 
-        for action in actions_set:
-            dx, dy = action
-            next_node = (current_node[0] + dx, current_node[1] + dy)
+        for move, c2c_step in zip(actions_set, costs):
+            next_node = ((current_node[0] + round(move[0])), (current_node[1] + round(move[1])))
 
             if (5 <= next_node[0] < (map.shape[0]-5)) and (5 <= next_node[1] < (map.shape[1]-5)) and (next_node not in closed_list) and (np.array_equal(map[next_node[0], next_node[1]], black)):
-                new_cost = calculate_cost(cost_so_far[current_node], action)
+            
+                new_cost = cost_so_far[current_node] + c2c_step
                 heuristic_cost = heuristic(next_node, goal)  # Calculate heuristic cost
                 priority = new_cost + heuristic_cost  # Update priority with heuristic cost
 
@@ -98,15 +102,12 @@ def a_star(start, goal, map):
                     came_from[next_node] = current_node
                     # Update the color of the scanned pixel to green
                     map[next_node[0], next_node[1]] = [0, 255, 0]  # Green color
-                    # frame1 = cv2.cvtColor(map.astype(np.uint8), cv2.COLOR_RGB2BGR)
-                    # out.write(frame1)
                     if path_iteration % 10000 == 0:
                         frame = cv2.cvtColor(map.astype(np.uint8), cv2.COLOR_RGB2BGR)
                         out.write(frame)
                     path_iteration += 1
 
-    return None  # No path found
-
+    return None # No path found
 
 # Prompt user for the start coordinates
 while True:
@@ -156,6 +157,8 @@ start_node = (start_y, start_x)  # Assuming the robot starts from the bottom-lef
 goal_node = (goal_y, goal_x)
 path = a_star(start_node, goal_node, map)
 
+
+
 path_iteration = 0
 # Print the path
 if path :
@@ -171,9 +174,13 @@ if path :
 else:
     print("No path found.")
 
+#Computing time taken for the search
+time_end = time.time()
+time_taken = time_end - time_start
+
 # Display the updated image after scanning
 plt.imshow(map.astype(int))
-plt.title("Map after scanning")
+plt.title(f'Map after scanning, Run time: {time_taken} seconds')
 plt.show()
 
 out.release()
